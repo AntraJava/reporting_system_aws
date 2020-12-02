@@ -16,12 +16,14 @@ import com.antra.report.client.repository.ReportRequestRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -166,11 +168,21 @@ public class ReportServiceImpl implements ReportService {
             String key = fileLocation.split("/")[1];
             return s3Client.getObject(bucket, key).getObjectContent();
         } else if (type == FileType.EXCEL) {
-            String fileLocation = entity.getExcelReport().getFileLocation(); // this location is in local, definitely sucks
+            String fileId = entity.getExcelReport().getFileId();
+//            String fileLocation = entity.getExcelReport().getFileLocation();
+//            try {
+//                return new FileInputStream(fileLocation);// this location is in local, definitely sucks
+//            } catch (FileNotFoundException e) {
+//                log.error("No file found", e);
+//            }
+            RestTemplate restTemplate = new RestTemplate();
+//            InputStream is = restTemplate.execute(, HttpMethod.GET, null, ClientHttpResponse::getBody, fileId);
+            ResponseEntity<Resource> exchange = restTemplate.exchange("http://localhost:8888/excel/{id}/content",
+                    HttpMethod.GET, null, Resource.class, fileId);
             try {
-                return new FileInputStream(fileLocation);
-            } catch (FileNotFoundException e) {
-                log.error("No file found", e);
+                return exchange.getBody().getInputStream();
+            } catch (IOException e) {
+                log.error("Cannot download excel",e);
             }
         }
         return null;
