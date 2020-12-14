@@ -6,6 +6,7 @@ import com.antra.report.client.entity.PDFReportEntity;
 import com.antra.report.client.entity.ReportRequestEntity;
 import com.antra.report.client.entity.ReportStatus;
 import com.antra.report.client.exception.RequestNotFoundException;
+import com.antra.report.client.pojo.EmailType;
 import com.antra.report.client.pojo.FileType;
 import com.antra.report.client.pojo.reponse.ExcelResponse;
 import com.antra.report.client.pojo.reponse.PDFResponse;
@@ -37,11 +38,13 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRequestRepo reportRequestRepo;
     private final SNSService snsService;
     private final AmazonS3 s3Client;
+    private final EmailService emailService;
 
-    public ReportServiceImpl(ReportRequestRepo reportRequestRepo, SNSService snsService, AmazonS3 s3Client) {
+    public ReportServiceImpl(ReportRequestRepo reportRequestRepo, SNSService snsService, AmazonS3 s3Client, EmailService emailService) {
         this.reportRequestRepo = reportRequestRepo;
         this.snsService = snsService;
         this.s3Client = s3Client;
+        this.emailService = emailService;
     }
 
     private ReportRequestEntity persistToLocal(ReportRequest request) {
@@ -118,7 +121,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    @Transactional
+//    @Transactional // why this? email could fail
     public void updateAsyncPDFReport(SqsResponse response) {
         ReportRequestEntity entity = reportRequestRepo.findById(response.getReqId()).orElseThrow(RequestNotFoundException::new);
         var pdfReport = entity.getPdfReport();
@@ -133,10 +136,12 @@ public class ReportServiceImpl implements ReportService {
         }
         entity.setUpdatedTime(LocalDateTime.now());
         reportRequestRepo.save(entity);
+        String to = "dawei.zhuang@antra.com";
+        emailService.sendEmail(to, EmailType.SUCCESS, entity.getSubmitter());
     }
 
     @Override
-    @Transactional
+//    @Transactional
     public void updateAsyncExcelReport(SqsResponse response) {
         ReportRequestEntity entity = reportRequestRepo.findById(response.getReqId()).orElseThrow(RequestNotFoundException::new);
         var excelReport = entity.getExcelReport();
@@ -151,6 +156,8 @@ public class ReportServiceImpl implements ReportService {
         }
         entity.setUpdatedTime(LocalDateTime.now());
         reportRequestRepo.save(entity);
+        String to = "dawei.zhuang@antra.com";
+        emailService.sendEmail(to, EmailType.SUCCESS, entity.getSubmitter());
     }
 
     @Override
