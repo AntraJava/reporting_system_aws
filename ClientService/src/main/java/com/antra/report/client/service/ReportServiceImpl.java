@@ -136,7 +136,7 @@ public class ReportServiceImpl implements ReportService {
         }
         entity.setUpdatedTime(LocalDateTime.now());
         reportRequestRepo.save(entity);
-        String to = "dawei.zhuang@antra.com";
+        String to = "youremail@gmail.com";
         emailService.sendEmail(to, EmailType.SUCCESS, entity.getSubmitter());
     }
 
@@ -156,7 +156,7 @@ public class ReportServiceImpl implements ReportService {
         }
         entity.setUpdatedTime(LocalDateTime.now());
         reportRequestRepo.save(entity);
-        String to = "dawei.zhuang@antra.com";
+        String to = "youremail@gmail.com";
         emailService.sendEmail(to, EmailType.SUCCESS, entity.getSubmitter());
     }
 
